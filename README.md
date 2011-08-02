@@ -1,3 +1,6 @@
+# Should I use Muskrat?
+No!  It is still in development and will break your project.
+
 # What is Muskrat?
 
 Muskrat is an easy to use database abstraction layer for MySql and SQLite databases.
