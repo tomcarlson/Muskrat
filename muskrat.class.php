@@ -1,10 +1,8 @@
 <?php
-
 /**
- * Class for interacting with SQLITE and MySQL Databases
- * 
- * 
- */
+* Class for interacting with SQLITE and MySQL Databases
+*
+*/
  
 class Muskrat {	   // Begin class Muskrat
 	/* available for status and debug */
