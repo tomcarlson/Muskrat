@@ -51,14 +51,28 @@ class Muskrat {	   // Begin class Muskrat
     if (!$this->conn)
   	{ 
       switch ($this->db_type) {
-        case 'mysql':         	  	  
-  	      $this->conn = mysql_connect($this->db_host, $this->db_user, $this->db_password) or die('Error connecting to mysql');
-          mysql_select_db($this->db_name);       
+        case 'mysql':        
+          try {
+            $this->conn = new PDO('mysql:host='.$this->db_host.';dbname='.$this->db_name . ','. $this->db_username . ',' . $this->db_password);
+            $this->lastquery_status = "ok";              
+          } 
+          catch (PDOException $e) {
+          	$this->conn = NULL;
+            $this->lastquery_status = $e->getMessage();	
+          }     
           break;
         case 'sqlite':             
           //$this->conn = new SQLiteDatabase($this->db_name, 0666, $this->error);         
           // we must use sqlite3 in order to use the alter table to add fields
-          $this->conn = new PDO('sqlite:'.$this->db_name);
+          try {
+            $this->conn = new PDO('sqlite:'.$this->db_name); 
+            $this->lastquery_status = "ok";              
+          } 
+          catch (PDOException $e) {
+          	$this->conn = NULL;
+            $this->lastquery_status = $e->getMessage();	
+          }
+          
           break; 
         default:
           die('Type must be mysql or sqlite');
@@ -84,6 +98,42 @@ class Muskrat {	   // Begin class Muskrat
     }   
   }
 
+  public function dropTable($name) {  	
+ // 	$q = @$this->conn->query("SELECT * FROM $name");
+ //   if ($q === true) 
+      $this->conn->query("DROP TABLE $name");     
+    	
+  }
+  
+  // returns an array of table names  
+  public function showTables() {
+  	$table = array();
+  	
+  	if ($this->db_type == 'sqlite')    
+  	  $sql = "select tbl_name from sqlite_master;";  
+  	else    
+      $sql = "show tables;";    
+    
+    try {
+      $record = $this->conn->query($sql)->fetchAll(PDO::FETCH_NUM); //->fetchAll(PDO::FETCH_ASSOC);
+      $this->lastquery_status = "ok";         
+    }
+    catch (PDOException $e) {
+    	 $this->lastquery_status = $e->getMessage();	
+    }
+    
+    $this->lastquery_results = count($record);
+    
+    foreach ($record as $value)
+      $table[] = $value[0];
+    
+    if ($this->lastquery_results==1)
+      return $table[0];   // dereference from 0, so their code looks prettier
+    else
+      return $table;  	
+    
+  }
+  
   // primary_key will be an autoincrementing integer for our tables
   // when we create a table, we must include at least one field, so we choose
   // to specify the primary index field when we create the table.

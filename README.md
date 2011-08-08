@@ -90,7 +90,12 @@ At any time, we can obtain the status of our last operation
     else
       echo "Read " . $db->lastquery_results . " Twitter Records.";   
      
-   
+
+At any time, we can obtain a list of the tables in the database
+
+    echo "<pre>";
+    print_r($db->showTables());
+    
 
 # Other
 
