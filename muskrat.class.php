@@ -66,6 +66,10 @@ class Muskrat {	   // Begin class Muskrat
           // we must use sqlite3 in order to use the alter table to add fields
           try {
             $this->conn = new PDO('sqlite:'.$this->db_name); 
+            
+            // make sure we have write permission for this
+            chmod($this->db_name, octdec(775));  
+            
             $this->lastquery_status = "ok";              
           } 
           catch (PDOException $e) {
@@ -193,13 +197,25 @@ class Muskrat {	   // Begin class Muskrat
     
   } 
  
-  public function readRecord($table,$where_array) { 
+  // returns records matching the where_array
+  // if $order_by specified, orders those records in descending order, by $order_by COLUMN
+  // if $number_records is specified, returns latest X records that match
+  public function readRecord($table,$where_array,$order_by='',$number_records=0) { 
     $wherefield = implode(array_keys($where_array));
     $whereval = implode(array_values($where_array));
 
-    $sql = "SELECT * FROM $table ";
-    $sql .= " WHERE $wherefield = '$whereval'";
+    $sql = "SELECT *";      
+    $sql .= " FROM $table ";
     
+    if (strlen($wherefield)>0)
+    $sql .= " WHERE $wherefield = '$whereval' ";
+    
+    if ($order_by)
+      $sql .= "ORDER BY $order_by DESC";    
+    
+     if ($number_records)
+       $sql .= " LIMIT $number_records";
+      
     
     try {
       $record = $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -212,10 +228,12 @@ class Muskrat {	   // Begin class Muskrat
     
     $this->lastquery_results = count($record);
     
+
     if ($this->lastquery_results==1)
       return $record[0];   // dereference from 0, so their code looks prettier
     else
-      return $record;
+      return $record;  
+   
   }
     
   public function updateRecord($table,$where_array,$data_array) {  	
