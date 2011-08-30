@@ -7,8 +7,10 @@
 class Muskrat {	   // Begin class Muskrat
 	/* available for status and debug */
   var $lastquery_status;      // status of last operation
-  var $lastquery_results;     // number of results of last operation
-   
+  var $errorInfo;             // extended error information associated with the last operation
+  var $lastquery_results;     // number of results of last operation  
+
+  
   /* May be set externally with setter functions */ 
   var $db_type;             /* sqlite or mysql */  
   var $db_name;             /* name of database if mysql, path to and name of database file if sqlite */
@@ -53,8 +55,13 @@ class Muskrat {	   // Begin class Muskrat
       switch ($this->db_type) {
         case 'mysql':        
           try {
-            $this->conn = new PDO('mysql:host='.$this->db_host.';dbname='.$this->db_name . ','. $this->db_username . ',' . $this->db_password);
-            $this->lastquery_status = "ok";              
+                              
+          	$connect_string = "mysql:host=".$this->db_host.";dbname=".$this->db_name;
+            $this->conn = new PDO($connect_string, $this->db_username, $this->db_password);
+            $this->lastquery_status = "ok";    
+      
+             // make sure errorInfo() flags bad sql statements
+             $this->conn->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);                 
           } 
           catch (PDOException $e) {
           	$this->conn = NULL;
@@ -81,6 +88,8 @@ class Muskrat {	   // Begin class Muskrat
         default:
           die('Type must be mysql or sqlite');
       }
+      
+     
     }
   } 
   
@@ -123,7 +132,8 @@ class Muskrat {	   // Begin class Muskrat
       $this->lastquery_status = "ok";         
     }
     catch (PDOException $e) {
-    	 $this->lastquery_status = $e->getMessage();	
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
     }
     
     $this->lastquery_results = count($record);
@@ -145,8 +155,8 @@ class Muskrat {	   // Begin class Muskrat
   	$q = @$this->conn->query("SELECT * FROM $name");
     if ($q === false) {
       switch ($this->db_type) {
-        case 'mysql':         	  	  
-  	      $this->conn->query("CREATE TABLE $name $primary_key INT NOT NULL AUTO_INCREMENT PRIMARY KEY");          
+        case 'mysql':          	  	  
+  	      $this->conn->query("CREATE TABLE $name ($primary_key INT NOT NULL AUTO_INCREMENT PRIMARY KEY)");          
           break;
         case 'sqlite':             
           $this->conn->query("CREATE TABLE $name ($primary_key INTEGER, PRIMARY KEY($primary_key))");
@@ -164,7 +174,8 @@ class Muskrat {	   // Begin class Muskrat
       $this->lastquery_status = "ok";    
     }
     catch (PDOException $e) {
-    	 $this->lastquery_status = $e->getMessage();	
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
     }  
     	 
   	
@@ -172,27 +183,38 @@ class Muskrat {	   // Begin class Muskrat
 
   public function createRecord($table,$associative_array) {  	
   	$value_array = array();
-  	$sql = "INSERT INTO $table(";   	
+  	$sql = "INSERT INTO $table (";   	
   	foreach ($associative_array as $key => $value)
   	{
-  	  $sql .= $key . ',';
+  	  $sql .= $key . ', ';
   	  $value_array[] = $value;
   	}
-  	$sql = substr($sql,0,-1) . ')';  // remove last comma and close the parenthesis  	
-  	$sql .= ' VALUES (';
+  	$sql = substr($sql,0,-2) . ')';  // remove last comma-space and close the parenthesis  	
+  	$sql .= ' values (';
   	foreach ($associative_array as $value)
   	{
-  	  $sql .= "?,";
+  	  $sql .= "?, ";
   	}  	
-  	$sql = substr($sql,0,-1) . ');';  // remove last comma and close the parenthesis
-  	
+  	$sql = substr($sql,0,-2) . ');';  // remove last comma-space and close the parenthesis
+  	 	
   	try {
+  		
       $stmt = $this->conn->prepare($sql);
-      $stmt->execute($value_array); 
-      $this->lastquery_status = "ok";    
+      if (!$stmt)
+      {       
+      	$this->errorInfo = $this->conn->errorInfo();  	
+        $this->lastquery_status = $this->errorInfo[2];	
+      }
+      else
+      {
+        $stmt->execute($value_array); 
+        $this->lastquery_status = "ok";    
+      }
     }
-    catch (PDOException $e) {
-    	 $this->lastquery_status = $e->getMessage();	
+    catch (PDOException $e) 
+    {
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
     }     
     
   } 
@@ -223,7 +245,8 @@ class Muskrat {	   // Begin class Muskrat
         
     }
     catch (PDOException $e) {
-    	 $this->lastquery_status = $e->getMessage();	
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
     }
     
     $this->lastquery_results = count($record);
@@ -254,7 +277,8 @@ class Muskrat {	   // Begin class Muskrat
       $this->lastquery_status = "ok";    
     }
     catch (PDOException $e) {
-    	 $this->lastquery_status = $e->getMessage();	
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
     }  
         
   }  
@@ -271,6 +295,7 @@ class Muskrat {	   // Begin class Muskrat
       $this->lastquery_status = "ok";        
     }
     catch (PDOException $e) {
+    	 $this->errorInfo = $this->conn->errorInfo();  	
     	 $this->lastquery_status = $e->getMessage();	
     }     
     
