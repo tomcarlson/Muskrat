@@ -79,6 +79,13 @@ Finally, let's delete that record.
 
     $db->deleteRecord('User',array('username'=>'joe_user'));
 
+We can also read a record set based on raw sql 
+
+    $sql = "SELECT *";      
+    $sql .= " FROM User ";
+    $sql .= " WHERE Time > '1314835200' ";
+    $sql .= " AND Volume > '1000' ";
+    $data_array = $db->readRecordSQL($mover_tbl,$sql);   
 
 At any time, we can obtain the status of our last operation
 

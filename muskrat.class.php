@@ -219,6 +219,30 @@ class Muskrat {	   // Begin class Muskrat
     
   } 
  
+ 
+  // returns records determined by the raw SQL that you provide 
+  public function readRecordSQL($table,$sql) { 
+   
+    try {
+      $record = $this->conn->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+      $this->lastquery_status = "ok";    
+        
+    }
+    catch (PDOException $e) {
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
+    }
+    
+    $this->lastquery_results = count($record);
+    
+
+    if ($this->lastquery_results==1)
+      return $record[0];   // dereference from 0, so their code looks prettier
+    else
+      return $record;  
+   
+  }
+  
   // returns records matching the where_array
   // if $order_by specified, orders those records in descending order, by $order_by COLUMN
   // if $number_records is specified, returns latest X records that match
