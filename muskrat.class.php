@@ -111,6 +111,28 @@ class Muskrat {	   // Begin class Muskrat
     }   
   }
 
+  // returns 1 if table exists, returns 0 if table does not exist
+  public function tableExists($name) {
+  
+  
+    if ($this->db_type == 'sqlite')    
+  	  $sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='$name';";  
+  	else    
+      $sql = "show tables like '$name'; ";    
+    
+    try {
+      $record = $this->conn->query($sql)->fetchAll(PDO::FETCH_NUM); //->fetchAll(PDO::FETCH_ASSOC);
+      $this->lastquery_status = "ok";         
+    }
+    catch (PDOException $e) {
+    	$this->errorInfo = $this->conn->errorInfo();  	
+    	$this->lastquery_status = $e->getMessage();	
+    }
+    
+    return(count($record));
+  }
+  
+  
   public function dropTable($name) {  	
  // 	$q = @$this->conn->query("SELECT * FROM $name");
  //   if ($q === true) 

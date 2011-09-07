@@ -25,19 +25,18 @@ Let's link to a database.
     $db->connect();
     
     
+Let's test if a table already exists in our database, and if the table does not exist, let's create it 
+and add some fields to it.
 
-Now, we can create a `User` table in the db.  You must assign the field name of the 
-primary key, which will be an autoincrementing integer.
-    
-    $db->createTable('User','usernumber');
-    
-Let's add some fields to the table 
+    if (!$db->tableExists($table_name))
+    {
+	    $db->createTable($table_name,'id');
+	    $db->addField($table_name,'Time','BIGINT' ); 
+      $db->addField($table_name,'Title','varchar(100) default NULL' );
+      $db->addField($table_name,'WhereIs','varchar(100) default NULL');
+      $db->addField($table_name,'Tag','varchar(50) default NULL' );  
+    } 
 
-    $db->addField('User','username','varchar(100) default NULL' );
-    $db->addField('User','password','varchar(100) default NULL' );    
-    $db->addField('User','join_date','integer' );    
-    
-    
 
 Later, we may decide we wish to add another field to the table
 
