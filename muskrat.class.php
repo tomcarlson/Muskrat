@@ -269,8 +269,8 @@ class Muskrat {	   // Begin class Muskrat
   // if $order_by specified, orders those records in descending order, by $order_by COLUMN
   // if $number_records is specified, returns latest X records that match
   public function readRecord($table,$where_array,$order_by='',$number_records=0) { 
-    $wherefield = implode(array_keys($where_array));
-    $whereval = implode(array_values($where_array));
+    $wherefield = @implode(array_keys($where_array));
+    $whereval = @implode(array_values($where_array));
 
     $sql = "SELECT *";      
     $sql .= " FROM $table ";
@@ -319,7 +319,7 @@ class Muskrat {	   // Begin class Muskrat
         
     try {
       $stmt = $this->conn->prepare($sql);
-      $stmt->execute($data);   
+      @$stmt->execute($data);   
       $this->lastquery_status = "ok";    
     }
     catch (PDOException $e) {

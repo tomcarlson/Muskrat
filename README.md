@@ -30,8 +30,8 @@ and add some fields to it.
 
     if (!$db->tableExists($table_name))
     {
-	    $db->createTable($table_name,'id');
-	    $db->addField($table_name,'Time','BIGINT' ); 
+      $db->createTable($table_name,'id');
+      $db->addField($table_name,'Time','BIGINT' ); 
       $db->addField($table_name,'Title','varchar(100) default NULL' );
       $db->addField($table_name,'WhereIs','varchar(100) default NULL');
       $db->addField($table_name,'Tag','varchar(50) default NULL' );  
@@ -69,7 +69,7 @@ Now, let's read that record and print the expire date.
       echo date('F j, Y',$record['expire_date']);
     else
     {
-    	echo "<pre>";
+      echo "<pre>";
       print_r($record);  // there may be more than one record returned
     }
     
